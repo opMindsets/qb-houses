@@ -36,115 +36,7 @@ local isInsideOutfitsTarget = false
 
 -- Functions
 
-local function showEntranceHeaderMenu(house)
-    local headerMenu = {}
 
-    if QBCore.Functions.GetPlayerData().job and QBCore.Functions.GetPlayerData().job.name == 'realestate' then
-        isOwned = true
-    end
-
-    if not isOwned then
-        headerMenu[#headerMenu+1] = {
-            header = Lang:t("menu.view_house"),
-            params = {
-                event = "qb-houses:client:ViewHouse",
-                args = {}
-            }
-        }
-    else
-        if isOwned and HasHouseKey then
-            headerMenu[#headerMenu+1] = {
-                header = Lang:t("menu.enter_house"),
-                params = {
-                    event = "qb-houses:client:EnterHouse",
-                    args = {}
-                }
-            }
-            headerMenu[#headerMenu+1] = {
-                header = Lang:t("menu.give_house_key"),
-                params = {
-                    event = "qb-houses:client:giveHouseKey",
-                    args = {}
-                }
-            }
-        elseif isOwned and not HasHouseKey then
-            headerMenu[#headerMenu+1] = {
-                header = Lang:t("menu.ring_door"),
-                params = {
-                    event = "qb-houses:client:RequestRing",
-                    args = {}
-                }
-            }
-            headerMenu[#headerMenu+1] = {
-                header = Lang:t("menu.enter_unlocked_house"),
-                params = {
-                    event = "qb-houses:client:EnterHouse",
-                    args = {}
-                }
-            }
-            if QBCore.Functions.GetPlayerData().job and QBCore.Functions.GetPlayerData().job.name == 'police' then
-                headerMenu[#headerMenu+1] = {
-                    header = Lang:t("menu.lock_door_police"),
-                    params = {
-                        event = "qb-houses:client:ResetHouse",
-                        args = {}
-                    }
-                }
-            end
-        else
-            headerMenu = {}
-        end
-    end
-
-    headerMenu[#headerMenu + 1] = {
-        header = Lang:t('menu.close_menu'),
-        params = {
-            event = 'qb-menu:client:closeMenu'
-        }
-    }
-
-    if headerMenu and next(headerMenu) then
-        exports['qb-menu']:openMenu(headerMenu)
-    end
-end
-
-local function showExitHeaderMenu()
-    local headerMenu = {}
-    headerMenu[#headerMenu+1] = {
-        header = Lang:t("menu.exit_property"),
-        params = {
-            event = "qb-houses:client:ExitOwnedHouse",
-            args = {}
-        }
-    }
-    if isOwned then
-        headerMenu[#headerMenu+1] = {
-            header = Lang:t("menu.front_camera"),
-            params = {
-                event = "qb-houses:client:FrontDoorCam",
-                args = {}
-            }
-        }
-        headerMenu[#headerMenu+1] = {
-            header = Lang:t("menu.open_door"),
-            params = {
-                event = "qb-houses:client:AnswerDoorbell",
-                args = {}
-            }
-        }
-    end
-
-    headerMenu[#headerMenu + 1] = {
-        header = Lang:t('menu.close_menu'),
-        params = {
-          event = 'qb-menu:client:closeMenu'
-        }
-    }
-
-    if headerMenu and next(headerMenu) then
-        exports['qb-menu']:openMenu(headerMenu)
-    end
-end
 
 -- qb-target
 
@@ -448,11 +340,28 @@ local function SetHousesEntranceTargets()
     end
 end
 
+local function setHouseLocations()
+    if ClosestHouse ~= nil then
+        QBCore.Functions.TriggerCallback('qb-houses:server:getHouseLocations', function(result)
+            if result ~= nil then
+                if result.stash ~= nil then
+                    stashLocation = json.decode(result.stash)
+                    RegisterStashTarget()
+                end
+                if result.outfit ~= nil then
+                    outfitLocation = json.decode(result.outfit)
+                    RegisterOutfitsTarget()
+                end
+            end
+        end, ClosestHouse)
+    end
+end
+
 RegisterNetEvent('qb-houses:client:setHouseConfig', function(houseConfig)
     Config.Houses = houseConfig
     DeleteHousesTargets()
     SetHousesEntranceTargets()
-setHouseLocations()
+    setHouseLocations()
 end)
 
 local function loadAnimDict(dict)
@@ -665,23 +574,6 @@ local function SetClosestHouse()
         end
     end
     TriggerEvent('qb-garages:client:setHouseGarage', ClosestHouse, HasHouseKey)
-end
-
-local function setHouseLocations()
-    if ClosestHouse ~= nil then
-        QBCore.Functions.TriggerCallback('qb-houses:server:getHouseLocations', function(result)
-            if result ~= nil then
-                if result.stash ~= nil then
-                    stashLocation = json.decode(result.stash)
-                    RegisterStashTarget()
-                end
-                if result.outfit ~= nil then
-                    outfitLocation = json.decode(result.outfit)
-                    RegisterOutfitsTarget()
-                end
-            end
-        end, ClosestHouse)
-    end
 end
 
 local function UnloadDecorations()

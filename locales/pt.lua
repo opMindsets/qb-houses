@@ -62,7 +62,12 @@ local Translations = {
         ["outfits"] = "Outfits",
         ["characters"] = "Personagens",
         ["enter_unlocked_house"] = " Entrar",
-        ["lock_door_police"] = " Trancar"
+        ["lock_door_police"] = " Trancar",
+        ["lock"] = " Trancar",
+        ["set_stash"] = " Definir Armário",
+        ["set_clothes"] = " Definir Roupeiro",
+        ["decorate"]    = " Decorar"
+
     },
     log = {
         ["house_created"] = "Casa criada:",
