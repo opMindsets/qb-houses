@@ -7,7 +7,6 @@ local housesLoaded = false
 -- Threads
 
 CreateThread(function()
-    local HouseGarages = {}
     local result = MySQL.Sync.fetchAll('SELECT * FROM houselocations', {})
     if result[1] then
         for k, v in pairs(result) do
@@ -26,15 +25,10 @@ CreateThread(function()
                 garage = garage,
                 decorations = {}
             }
-            HouseGarages[v.name] = {
-                label = v.label,
-                takeVehicle = garage
-            }
         end
     end
-    TriggerClientEvent("qb-garages:client:houseGarageConfig", -1, HouseGarages)
     TriggerClientEvent("qb-houses:client:setHouseConfig", -1, Config.Houses)
-end)
+end
 
 CreateThread(function()
     while true do
@@ -164,6 +158,8 @@ RegisterNetEvent('qb-houses:server:createBlip', function()
     TriggerClientEvent("qb-houses:client:createBlip", -1, coords)
 end)
 
+
+
 RegisterNetEvent('qb-houses:server:addNewHouse', function(street, coords, price, tier)
     local src = source
     local street = street:gsub("%'", "")
@@ -192,12 +188,8 @@ end)
 RegisterNetEvent('qb-houses:server:addGarage', function(house, coords)
     local src = source
     MySQL.Async.execute('UPDATE houselocations SET garage = ? WHERE name = ?', {json.encode(coords), house})
-    local garageInfo = {
-        label = Config.Houses[house].adress,
-        takeVehicle = coords
-    }
-    TriggerClientEvent("qb-garages:client:addHouseGarage", -1, house, garageInfo)
-    TriggerClientEvent('QBCore:Notify', src, Lang:t("info.added_garage", {value = garageInfo.label}))
+    TriggerClientEvent("rv-garages:client:updateGarage", -1) 	-- Update Garages
+    TriggerClientEvent('QBCore:Notify', src, "You have added a garage: " .. Config.Houses[house].adress)
 end)
 
 RegisterNetEvent('qb-houses:server:viewHouse', function(house)
@@ -240,6 +232,7 @@ RegisterNetEvent('qb-houses:server:buyHouse', function(house)
         pData.Functions.RemoveMoney('bank', HousePrice, "bought-house") -- 21% Extra house costs
         exports['qb-management']:AddMoney("realestate", (HousePrice / 100) * math.random(18, 25))
         TriggerEvent('qb-log:server:CreateLog', 'house', Lang:t("log.house_purchased"), 'green', Lang:t("log.house_purchased_by", {house = house:upper(), price = HousePrice, firstname = pData.PlayerData.charinfo.firstname, lastname = pData.PlayerData.charinfo.lastname}))
+        TriggerClientEvent("rv-garages:client:updateGarage", -1) 	-- Update Garages	
         TriggerClientEvent('QBCore:Notify', src, Lang:t("success.house_purchased"), 'success', 5000)
     else
         TriggerClientEvent('QBCore:Notify', src, Lang:t("error.not_enough_money"), "error")

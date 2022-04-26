@@ -573,7 +573,6 @@ local function SetClosestHouse()
             end, ClosestHouse)
         end
     end
-    TriggerEvent('qb-garages:client:setHouseGarage', ClosestHouse, HasHouseKey)
 end
 
 local function UnloadDecorations()
@@ -1046,7 +1045,6 @@ AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
     TriggerEvent('qb-houses:client:setupHouseBlips')
     if Config.UnownedBlips then TriggerEvent('qb-houses:client:setupHouseBlips2') end
     Wait(100)
-    TriggerEvent('qb-garages:client:setHouseGarage', ClosestHouse, HasHouseKey)
     TriggerServerEvent("qb-houses:server:setHouses")
 end)
 
@@ -1090,17 +1088,44 @@ end)
 
 RegisterNetEvent('qb-houses:client:addGarage', function()
     if ClosestHouse ~= nil then
-        local pos = GetEntityCoords(PlayerPedId())
-        local heading = GetEntityHeading(PlayerPedId())
-        local coords = {
-            x = pos.x,
-            y = pos.y,
-            z = pos.z,
-            h = heading,
-        }
-        TriggerServerEvent('qb-houses:server:addGarage', ClosestHouse, coords)
+        local ped = PlayerPedId()
+        if IsPedInAnyVehicle(ped, false) then            
+            local veh = GetVehiclePedIsIn(ped)
+			local vehpos = GetEntityCoords(veh)
+			local x = QBCore.Shared.Round(vehpos.x, 2)
+			local y = QBCore.Shared.Round(vehpos.y, 2)
+			local z = QBCore.Shared.Round(vehpos.z, 2)
+			local heading = GetEntityHeading(veh)
+			local h = QBCore.Shared.Round(heading, 2)
+			local forward, right, up, pos = GetEntityMatrix(veh)
+			local x1 = QBCore.Shared.Round(pos.x + (forward.x * (3.0)) + (right.x * (2.0)), 2)
+			local y1 = QBCore.Shared.Round(pos.y + (forward.y * (3.0)) + (right.y * (2.0)), 2)
+			local x2 = QBCore.Shared.Round(pos.x + (forward.x * (-3.0)) + (right.x * (2.0)), 2)
+			local y2 = QBCore.Shared.Round(pos.y + (forward.y * (-3.0)) + (right.y * (2.0)), 2)
+			local x3 = QBCore.Shared.Round(pos.x + (forward.x * (-3.0)) + (right.x * (-2.0)), 2)
+			local y3 = QBCore.Shared.Round(pos.y + (forward.y * (-3.0)) + (right.y * (-2.0)), 2)
+			local x4 = QBCore.Shared.Round(pos.x + (forward.x * (3.0)) + (right.x * (-2.0)), 2)
+			local y4 = QBCore.Shared.Round(pos.y + (forward.y * (3.0)) + (right.y * (-2.0)), 2)
+            local coords = {
+                x = x,
+				y = y,
+				z = z,
+				h = h,
+				x1 = x1,
+				y1 = y1,
+				x2 = x2,
+				y2 = y2,
+				x3 = x3,
+				y3 = y3,
+				x4 = x4,
+				y4 = y4,
+            }
+            TriggerServerEvent('qb-houses:server:addGarage', ClosestHouse, coords)
+        else
+            QBCore.Functions.Notify("You need to be in the vehicle..", "error")
+        end
     else
-        QBCore.Functions.Notify(Lang:t("error.no_house"), "error")
+        QBCore.Functions.Notify("No house around..", "error")
     end
 end)
 
@@ -1267,7 +1292,7 @@ RegisterNetEvent('qb-houses:client:refreshBlips', function() -- Refresh unowned 
     TriggerEvent('qb-houses:client:setupHouseBlips2')
     DeleteHousesTargets()
     SetHousesEntranceTargets()
-setHouseLocations()
+    setHouseLocations()
 end)
 
 RegisterNetEvent('qb-houses:client:SetClosestHouse', function()
@@ -1401,14 +1426,14 @@ RegisterNetEvent('qb-houses:client:SetRamState', function(bool, house)
     Config.Houses[house].IsRaming = bool
     DeleteHousesTargets()
     SetHousesEntranceTargets()
-setHouseLocations()
+    setHouseLocations()
 end)
 
 RegisterNetEvent('qb-houses:client:SetHouseRammed', function(bool, house)
     Config.Houses[house].IsRammed = bool
     DeleteHousesTargets()
     SetHousesEntranceTargets()
-setHouseLocations()
+    setHouseLocations()
 end)
 
 RegisterNetEvent('qb-houses:client:ResetHouse', function()
@@ -1488,7 +1513,7 @@ end)
 RegisterNetEvent('qb-house:client:RefreshHouseTargets', function ()
     DeleteHousesTargets()
     SetHousesEntranceTargets()
-setHouseLocations()
+    setHouseLocations()
 end)
 
 RegisterNetEvent('qb-house:client:buyHous', function()
@@ -1534,7 +1559,6 @@ CreateThread(function ()
         TriggerEvent('qb-houses:client:setupHouseBlips2')
     end
     Wait(wait)
-    TriggerEvent('qb-garages:client:setHouseGarage', ClosestHouse, HasHouseKey)
     TriggerServerEvent("qb-houses:server:setHouses")
 
     while true do
