@@ -28,7 +28,7 @@ CreateThread(function()
         end
     end
     TriggerClientEvent("qb-houses:client:setHouseConfig", -1, Config.Houses)
-end
+end)
 
 CreateThread(function()
     while true do
